@@ -1,0 +1,37 @@
+{
+    "name": "RPGNexus - Backend",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".."
+    },
+    "runArgs": ["--network=rpgnexus-backend_rpgnexus-network"],
+    "workspaceFolder": "/workspace",
+    "features": {
+        "ghcr.io/devcontainers/features/git:1": {},
+        "ghcr.io/devcontainers/features/github-cli:1": {}
+    },
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "terminal.integrated.defaultProfile.linux": "bash",
+                "python.defaultInterpreterPath": "/usr/local/bin/python",
+                "editor.formatOnSave": true,
+                "editor.codeActionsOnSave": {
+                    "source.organizeImports": true
+                }
+            },
+            "extensions": [
+                "ms-python.python",
+                "ms-python.black-formatter",
+                "ms-python.flake8",
+                "ms-vscode.vscode-json",
+                "redhat.vscode-yaml",
+                "mongodb.mongodb-vscode"
+            ]
+        }
+    },
+    "forwardPorts": [8000],
+    "postCreateCommand": "pip3 install --user -r requirements-dev.txt",
+    "postStartCommand": "uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload",
+    "remoteUser": "vscode"
+}

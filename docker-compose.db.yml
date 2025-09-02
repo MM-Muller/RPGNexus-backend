@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  db:
+    image: mongo:7.0
+    container_name: rpgnexus_db
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: rpg_textual
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - rpgnexus-network
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: rpgnexus_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - rpgnexus-network
+
+volumes:
+  mongodb_data:
+  redis_data:
+
+networks:
+  rpgnexus-network:
+    driver: bridge
