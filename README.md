@@ -31,3 +31,14 @@ Cronograma previsto:
 - Sistema de combate, progressão de níveis e inventário.
 - Histórico de campanhas e interações.
 - Autenticação segura com JWT.
+
+## 🐳 Dev Container
+
+Este projeto já vem configurado com um **Dev Container** (VS Code + Docker), facilitando o setup do ambiente.
+
+- Extensões, dependências e configurações já vêm pré-instaladas.
+- Serviços incluídos: **Backend (FastAPI)**, **Frontend (Angular)**, **MongoDB** e **Redis**.
+- Scripts automáticos (`post-create.sh`) inicializam o projeto e criam as estruturas básicas.
+
+👉 Para usar, basta abrir o projeto no **VS Code** e selecionar **"Reopen in Container"**.  
+Assim, todo o ambiente estará pronto sem necessidade de instalações adicionais.
