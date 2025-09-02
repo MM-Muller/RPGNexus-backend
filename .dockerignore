@@ -1,0 +1,7 @@
+# Ignora a pasta de dependências locais para não interferir com o build do contêiner
+__pycache__/
+*.py[cod]
+.venv
+env/
+venv/
+ENV/
