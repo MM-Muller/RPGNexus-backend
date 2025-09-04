@@ -8,11 +8,9 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "chave-secreta-para-desenvolvimento"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    DB_NAME: str = "rpg_textual"
 
-    # ALTERAÇÃO IMPORTANTE AQUI: de 'localhost' para 'db'
-    MONGODB_URL: str = "mongodb://rpg_user:rpg_password123@db:27017/rpg_textual"
-
-    # A conexão com o Redis também deve usar o nome do serviço
+    MONGODB_URL: str = "mongodb://rpg_user:rpg_password123@db:27017"
     REDIS_URL: str = "redis://redis:6379"
 
     OPENAI_API_KEY: Optional[str] = None

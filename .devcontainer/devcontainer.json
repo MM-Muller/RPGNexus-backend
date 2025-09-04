@@ -4,7 +4,7 @@
         "dockerfile": "Dockerfile",
         "context": ".."
     },
-    "runArgs": ["--network=rpgnexus-backend_rpgnexus-network"],
+    // "runArgs": ["--network=rpgnexus-backend_rpgnexus-network"], // <-- REMOVA OU COMENTE ESTA LINHA
     "workspaceFolder": "/workspace",
     "features": {
         "ghcr.io/devcontainers/features/git:1": {},
@@ -17,7 +17,7 @@
                 "python.defaultInterpreterPath": "/usr/local/bin/python",
                 "editor.formatOnSave": true,
                 "editor.codeActionsOnSave": {
-                    "source.organizeImports": true
+                    "source.organizeImports": "explicit" // Mudei para "explicit" para melhor compatibilidade
                 }
             },
             "extensions": [

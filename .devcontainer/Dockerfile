@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
     git \
     vim \
     nano \
+    gpg \
     && rm -rf /var/lib/apt/lists/*
 
 # Criar links simbólicos para python
@@ -21,12 +22,16 @@ RUN ln -sf /usr/bin/python3.11 /usr/local/bin/python \
 # Instalar ferramentas Python
 RUN pip3 install --upgrade pip setuptools wheel
 
-# Instalar MongoDB Tools
-RUN wget -qO - https://www.mongodb.org/static/pgp/server-7.0.asc | apt-key add - \
-    && echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-7.0.list \
+# --- SEÇÃO CORRIGIDA ---
+# Instalar MongoDB Tools usando o método gpg keyring
+RUN curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc | \
+    gpg --dearmor -o /usr/share/keyrings/mongodb-server-7.0.gpg \
+    && echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | \
+    tee /etc/apt/sources.list.d/mongodb-org-7.0.list \
     && apt-get update \
     && apt-get install -y mongodb-mongosh mongodb-database-tools \
     && rm -rf /var/lib/apt/lists/*
+# --- FIM DA SEÇÃO CORRIGIDA ---
 
 # Configurar usuário vscode
 USER vscode
@@ -41,6 +46,5 @@ ENV PATH="/home/vscode/.local/bin:$PATH"
 
 WORKDIR /workspace
 
-# --- LINHA ADICIONADA AQUI ---
 # Copia todo o código do projeto para o diretório de trabalho no contêiner
 COPY --chown=vscode:vscode . .
