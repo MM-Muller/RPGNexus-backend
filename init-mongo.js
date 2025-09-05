@@ -13,6 +13,4 @@ db.createUser({
     ]
 });
 
-// Criar coleções iniciais
-
 print('Base de dados inicializada com sucesso!');

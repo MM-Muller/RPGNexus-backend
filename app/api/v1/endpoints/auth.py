@@ -9,6 +9,14 @@ from app.schemas.user import UserCreate
 router = APIRouter()
 
 
+def user_helper(user) -> dict:
+    return {
+        "id": str(user["_id"]),
+        "username": user["username"],
+        "email": user["email"],
+    }
+
+
 @router.post("/signup")
 async def create_user(
     user: UserCreate, db: AsyncIOMotorDatabase = Depends(deps.get_db)
@@ -20,7 +28,8 @@ async def create_user(
             detail="Email already registered",
         )
     created_user = await crud_user.create_user(db=db, user=user)
-    return created_user
+    # Usa a função auxiliar para formatar a resposta
+    return user_helper(created_user)
 
 
 @router.post("/login")

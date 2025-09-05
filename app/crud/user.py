@@ -9,11 +9,15 @@ async def get_user_by_email(db: AsyncIOMotorDatabase, email: str):
 
 async def create_user(db: AsyncIOMotorDatabase, user: UserCreate):
     hashed_password = get_password_hash(user.password)
-    user_data = user.dict()
+
+    # CORREÇÃO: Use model_dump() em vez de dict() para Pydantic v2
+    user_data = user.model_dump()
+
     user_data["hashed_password"] = hashed_password
     del user_data["password"]
 
-    await db.users.insert_one(user_data)
+    result = await db.users.insert_one(user_data)
 
-    del user_data["hashed_password"]
-    return user_data
+    created_user = await db.users.find_one({"_id": result.inserted_id})
+
+    return created_user
