@@ -15,6 +15,5 @@ async def create_user(db: AsyncIOMotorDatabase, user: UserCreate):
 
     await db.users.insert_one(user_data)
 
-    # Após a inserção, podemos retornar o objeto sem a senha hashada
     del user_data["hashed_password"]
     return user_data
