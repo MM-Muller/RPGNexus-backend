@@ -20,13 +20,15 @@ async def create_user(db: AsyncIOMotorDatabase, user: UserCreate):
 
 async def update_user(db: AsyncIOMotorDatabase, user_id: str, user_update: UserUpdate):
     update_data = user_update.model_dump(exclude_unset=True)
-
     if "password" in update_data and update_data["password"]:
         update_data["hashed_password"] = get_password_hash(update_data["password"])
         del update_data["password"]
-
     if update_data:
         await db.users.update_one({"_id": ObjectId(user_id)}, {"$set": update_data})
-
     updated_user = await db.users.find_one({"_id": ObjectId(user_id)})
     return updated_user
+
+
+async def delete_user(db: AsyncIOMotorDatabase, user_id: str):
+    delete_result = await db.users.delete_one({"_id": ObjectId(user_id)})
+    return delete_result.deleted_count > 0
