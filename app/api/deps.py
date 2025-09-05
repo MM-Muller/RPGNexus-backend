@@ -17,7 +17,6 @@ async def get_db() -> AsyncIOMotorDatabase:
     return db
 
 
-# NOVA FUNÇÃO: get_current_user
 async def get_current_user(
     token: str = Depends(oauth2_scheme), db: AsyncIOMotorDatabase = Depends(get_db)
 ):

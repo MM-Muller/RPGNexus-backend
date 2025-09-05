@@ -1,12 +1,15 @@
 from fastapi import APIRouter, Depends
 from app.api import deps
-from app.schemas.user import UserCreate
+from app.schemas.user import UserUpdate
+from app.crud import user as crud_user
+from motor.motor_asyncio import AsyncIOMotorDatabase
 
 router = APIRouter()
 
 
-# Função auxiliar para formatar a resposta
 def user_helper(user) -> dict:
+    if not user:
+        return {}
     return {
         "id": str(user["_id"]),
         "username": user["username"],
@@ -19,6 +22,20 @@ async def read_users_me(current_user=Depends(deps.get_current_user)):
     """
     Retorna as informações do usuário logado.
     """
-    if current_user:
-        return user_helper(current_user)
-    return {"msg": "User not found"}
+    return user_helper(current_user)
+
+
+@router.put("/me")
+async def update_user_me(
+    user_update: UserUpdate,
+    current_user=Depends(deps.get_current_user),
+    db: AsyncIOMotorDatabase = Depends(deps.get_db),
+):
+    """
+    Atualiza as informações do usuário logado.
+    """
+    user_id = str(current_user["_id"])
+    updated_user = await crud_user.update_user(
+        db, user_id=user_id, user_update=user_update
+    )
+    return user_helper(updated_user)

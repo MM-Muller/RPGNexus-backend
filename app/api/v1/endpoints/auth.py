@@ -28,7 +28,6 @@ async def create_user(
             detail="Email already registered",
         )
     created_user = await crud_user.create_user(db=db, user=user)
-    # Usa a função auxiliar para formatar a resposta
     return user_helper(created_user)
 
 
