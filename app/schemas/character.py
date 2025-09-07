@@ -18,6 +18,8 @@ class CharacterCreate(BaseModel):
     attributes: Attributes
     race_icon: str
     class_icon: str
+    level: int = 1
+    experience: int = 0
 
     class Config:
         populate_by_name = True
