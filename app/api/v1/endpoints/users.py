@@ -7,7 +7,6 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 router = APIRouter()
 
 
-# Função auxiliar para formatar a resposta
 def user_helper(user) -> dict:
     if not user:
         return {}

@@ -6,9 +6,7 @@ from bson import ObjectId
 async def create_character(
     db: AsyncIOMotorDatabase, user_id: str, character: CharacterCreate
 ):
-    character_data = character.model_dump(
-        by_alias=True
-    )  # Usa by_alias=True para converter 'class' para 'char_class'
+    character_data = character.model_dump(by_alias=True)
     character_data["user_id"] = user_id
     result = await db.characters.insert_one(character_data)
     created_character = await db.characters.find_one({"_id": result.inserted_id})
@@ -21,7 +19,6 @@ async def get_characters_by_user(db: AsyncIOMotorDatabase, user_id: str):
 
 
 async def delete_character(db: AsyncIOMotorDatabase, character_id: str, user_id: str):
-    # Garante que um usuário só pode deletar o seu próprio personagem
     delete_result = await db.characters.delete_one(
         {"_id": ObjectId(character_id), "user_id": user_id}
     )
