@@ -10,8 +10,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     DB_NAME: str = "rpg_textual"
 
-    # LINHA ALTERADA ABAIXO
-    MONGODB_URL: str = "mongodb://rpg_user:rpg_password123@db:27017/?authSource=rpg_textual"
+    MONGODB_URL: str = "mongodb://rpg_user:rpg_password123@localhost:27017/?authSource=rpg_textual"
     REDIS_URL: str = "redis://redis:6379"
 
     OPENAI_API_KEY: Optional[str] = None
