@@ -5,12 +5,17 @@ from app.api import deps
 from app.schemas.character import CharacterCreate
 from app.crud import character as crud_character
 from app.core.leveling import get_xp_for_next_level
+from typing import Dict
 
 router = APIRouter()
 
 
 class ExperiencePayload(BaseModel):
     experience_points: int
+
+
+class ProgressPayload(BaseModel):
+    progress: Dict[str, bool]
 
 
 def character_helper(character) -> dict:
@@ -30,6 +35,7 @@ def character_helper(character) -> dict:
         "user_id": character["user_id"],
         "level": character.get("level", 1),
         "experience": character.get("experience", 0),
+        "campaign_progress": character.get("campaign_progress", {}),
     }
 
 
@@ -113,3 +119,32 @@ async def delete_character(
     if deleted_count == 0:
         raise HTTPException(status_code=404, detail="Character not found")
     return
+
+
+@router.get("/{character_id}/progress")
+async def get_character_progress(
+    character_id: str,
+    db: AsyncIOMotorDatabase = Depends(deps.get_db),
+    current_user=Depends(deps.get_current_user),
+):
+    character = await crud_character.get_character_by_id(db, character_id)
+    if not character or character["user_id"] != str(current_user["_id"]):
+        raise HTTPException(status_code=404, detail="Character not found")
+    return {"campaign_progress": character.get("campaign_progress", {})}
+
+
+@router.put("/{character_id}/progress")
+async def update_character_progress(
+    character_id: str,
+    payload: ProgressPayload,
+    db: AsyncIOMotorDatabase = Depends(deps.get_db),
+    current_user=Depends(deps.get_current_user),
+):
+    character = await crud_character.get_character_by_id(db, character_id)
+    if not character or character["user_id"] != str(current_user["_id"]):
+        raise HTTPException(status_code=404, detail="Character not found")
+
+    updated_character = await crud_character.update_character(
+        db, character_id, {"campaign_progress": payload.progress}
+    )
+    return character_helper(updated_character)

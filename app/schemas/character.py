@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, Dict
 
 
 class Attributes(BaseModel):
@@ -20,6 +20,7 @@ class CharacterCreate(BaseModel):
     class_icon: str
     level: int = 1
     experience: int = 0
+    campaign_progress: Dict[str, bool] = {}
 
     class Config:
         populate_by_name = True
