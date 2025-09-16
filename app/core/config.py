@@ -1,13 +1,12 @@
 from pydantic_settings import BaseSettings
 from typing import Optional
 
-
 class Settings(BaseSettings):
     SECRET_KEY: str
-
     MONGODB_URL: str
 
-    REDIS_URL: str
+    CHROMA_HOST: str = "localhost"
+    CHROMA_PORT: int = 8001
 
     OPENAI_API_KEY: Optional[str] = None
     ANTHROPIC_API_KEY: Optional[str] = None
@@ -20,6 +19,5 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
-
 
 settings = Settings()
