@@ -1,44 +1,118 @@
-# RPG Textual com IA - Trainee Wise Intelligence
 
-Este repositório faz parte do **Programa Trainee em Inteligência Artificial (Wise Intelligence)** e corresponde ao **Projeto 2**.  
-O objetivo é desenvolver um **sistema web completo de RPG textual**, integrando **front-end (Angular)**, **back-end (Python com FastAPI)**, **MongoDB** como banco de dados e **LLM** para narrativas dinâmicas.
+<p align="center">
+  <img src="https://raw.githubusercontent.com/MM-Muller/RPGNexus-frontend/main/src/assets/images/logo.png" alt="RPGNexus Logo" width="150"/>
+</p>
 
-## 🚧 Status do Projeto
+<h1 align="center">RPGNexus Back-end API</h1>
 
-Atualmente, o projeto está **em andamento**.  
-As primeiras etapas de configuração de repositórios, organização de pastas e definição da identidade do sistema estão sendo realizadas.
+<p align="center">
+  <strong>API RESTful para o jogo de RPG textual com IA "RPGNexus".</strong><br>
+  Parte do Projeto 2 do Programa Trainee em Inteligência Artificial (Wise Intelligence).
+</p>
+
+---
+
+## 🚀 Sobre o Projeto
+
+O RPGNexus é um sistema web de RPG textual que utiliza um modelo de linguagem (LLM) para criar narrativas dinâmicas e interativas. Este repositório contém o back-end da aplicação, desenvolvido em Python com o framework FastAPI, responsável por gerenciar toda a lógica de negócio, autenticação, personagens, campanhas e a integração com a IA.
 
 ## 🛠️ Tecnologias Principais
 
-- **Front-end:** Angular
-- **Back-end:** Python (FastAPI)
+- **Linguagem:** Python 3.11
+- **Framework:** FastAPI
 - **Banco de Dados:** MongoDB
-- **Inteligência Artificial:** LLM (Large Language Model)
-- **Autenticação:** JWT
+- **Autenticação:** JWT (JSON Web Tokens)
+- **Inteligência Artificial:** LLM (Large Language Model) para geração de narrativas.
+- **Containerização:** Docker e VS Code Dev Container
 
-## 📖 Documentação
+## ✨ Funcionalidades
 
-A documentação completa do projeto, incluindo instruções de configuração e execução, está disponível em breve
+- **Autenticação de Usuários:** Cadastro (`/signup`), login (`/login`) e verificação de usuário (`/me`) com JWT.
+- **Gerenciamento de Personagens:** Criação, listagem, visualização de detalhes e exclusão de personagens.
+- **Sistema de Campanhas:** Lógica para iniciar, consultar, interagir e encerrar campanhas.
+- **Integração com LLM:** Geração de prompts dinâmicos com base no estado do jogo e processamento de respostas em JSON.
+- **Persistência de Dados:** Armazenamento de usuários, personagens e históricos de campanha no MongoDB.
 
-Cronograma previsto:
-👉 [Acesse o Trello](https://trello.com/b/3wHYNaO6/rpg-textual-trainee-wise)
+---
 
-## 🎮 Funcionalidades Previstas
+## 🏁 Começando
 
-- Criação e gerenciamento de personagens (nome, raça, classe, atributos etc.).
-- Início e continuidade de campanhas interativas.
-- Interações com o LLM retornando narrativas e eventos em JSON.
-- Sistema de combate, progressão de níveis e inventário.
-- Histórico de campanhas e interações.
-- Autenticação segura com JWT.
+Estas instruções permitirão que você tenha uma cópia do projeto em operação na sua máquina local para desenvolvimento e testes.
 
-## 🐳 Dev Container
+### Pré-requisitos
 
-Este projeto já vem configurado com um **Dev Container** (VS Code + Docker), facilitando o setup do ambiente.
+- Docker e Docker Compose
+- Visual Studio Code com a extensão [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
 
-- Extensões, dependências e configurações já vêm pré-instaladas.
-- Serviços incluídos: **Backend (FastAPI)**, **Frontend (Angular)**, **MongoDB** e **Redis**.
-- Scripts automáticos (`post-create.sh`) inicializam o projeto e criam as estruturas básicas.
+### 🐳 Executando com Dev Container (Recomendado)
 
-👉 Para usar, basta abrir o projeto no **VS Code** e selecionar **"Reopen in Container"**.  
-Assim, todo o ambiente estará pronto sem necessidade de instalações adicionais.
+Este projeto está configurado para ser executado em um ambiente de desenvolvimento containerizado, o que simplifica a configuração.
+
+1.  Clone o repositório:
+    ```bash
+    git clone https://github.com/MM-Muller/RPGNexus-backend
+    cd rpgnexus-backend
+    ```
+2.  Abra o projeto no VS Code.
+3.  O VS Code irá sugerir **"Reopen in Container"**. Clique nesta opção.
+4.  Aguarde o Docker construir a imagem e iniciar o container. O FastAPI será iniciado automaticamente.
+
+O servidor estará disponível em `http://localhost:8000`.
+
+---
+
+## 📜 Documentação da API
+
+A API segue os padrões REST e a documentação interativa está disponível em:
+
+- **Swagger UI:** `http://localhost:8000/docs`
+- **ReDoc:** `http://localhost:8000/redoc`
+
+### Endpoints Disponíveis
+
+#### Autenticação (`/api/v1/auth`)
+
+- **`POST /signup`**: Cria uma nova conta de usuário.
+- **`POST /login`**: Autentica um usuário e retorna um token JWT.
+- **`GET /me`**: Retorna os dados do usuário autenticado.
+
+#### Personagens (`/api/v1/characters`)
+
+- **`POST /`**: Cria um novo personagem para o usuário autenticado.
+- **`GET /`**: Lista todos os personagens do usuário autenticado.
+- **`GET /{character_id}`**: (A ser implementado) Obtém os detalhes de um personagem específico.
+- **`DELETE /{character_id}`**: Deleta um personagem do usuário autenticado.
+
+#### Campanha (`/api/v1/campanha`)
+
+- **`POST /`**: (A ser implementado) Inicia uma nova campanha.
+- **`GET /{id}`**: (A ser implementado) Retorna o estado atual da campanha.
+- **`POST /{id}/acao`**: (A ser implementado) Envia uma ação do jogador e retorna a resposta do LLM.
+- **`DELETE /{id}`**: (A ser implementado) Encerra uma campanha.
+
+#### Histórico (`/api/v1/historico`)
+
+- **`GET /{campanha_id}`**: (A ser implementado) Retorna o histórico de interações de uma campanha.
+- **`DELETE /{campanha_id}`**: (A ser implementado) Limpa o histórico.
+
+---
+
+## 🗂️ Estrutura de Pastas
+
+A estrutura do projeto foi organizada para separar as responsabilidades, facilitando a manutenção e escalabilidade da API.
+```
+/
+├── app/                  # Contém todo o código fonte da aplicação
+│   ├── api/              # Módulos da API (endpoints, dependências)
+│   │   └── v1/
+│   │       ├── endpoints/  # Arquivos com os endpoints (auth, users, characters)
+│   │       └── router.py   # Roteador principal da API v1
+│   ├── core/             # Configurações, segurança e lógica principal
+│   ├── crud/             # Funções de interação com o banco de dados (Create, Read, Update, Delete)
+│   ├── schemas/          # Modelos de dados Pydantic para validação e serialização
+│   └── main.py           # Ponto de entrada da aplicação FastAPI
+├── .devcontainer/        # Configurações do Dev Container
+├── .env.example          # Arquivo de exemplo para variáveis de ambiente
+├── requirements.txt      # Dependências de produção
+└── requirements-dev.txt  # Dependências de desenvolvimento
+```
