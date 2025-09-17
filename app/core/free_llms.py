@@ -1,46 +1,29 @@
-# rpgnexus-backend/app/core/free_llms.py
-
 import os
 import json
 import aiohttp
-from google import genai
-from google.genai import types
+import google.generativeai as genai
 from app.core.log_util import log_exception
 
-# --- Variáveis Globais para Clientes (iniciadas como None) ---
-_google_client = None
-_cerebras_headers = None
+# --- Clientes Globais (Inicializados como None) ---
+_google_model = None
 _groq_headers = None
-# ... adicione outros clientes aqui se precisar
+
 
 # --- Funções de Inicialização (Lazy Getters) ---
-
-
-def get_google_client():
-    """Cria e retorna o cliente do Google AI Studio, apenas uma vez."""
-    global _google_client
-    if _google_client is None:
+def get_google_model():
+    """Configura e retorna o modelo generativo do Google, apenas uma vez."""
+    global _google_model
+    if _google_model is None:
         api_key = os.environ.get("GOOGLE_AISTUDIO_KEY")
         if not api_key:
             print("AVISO: GOOGLE_AISTUDIO_KEY não encontrada no ambiente.")
             return None
-        _google_client = genai.Client(api_key=api_key)
-    return _google_client
-
-
-def get_cerebras_headers():
-    """Cria e retorna os headers para a API Cerebras, apenas uma vez."""
-    global _cerebras_headers
-    if _cerebras_headers is None:
-        api_key = os.environ.get("CEREBRAS_KEY")
-        if not api_key:
-            print("AVISO: CEREBRAS_KEY não encontrada no ambiente.")
-            return None
-        _cerebras_headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        }
-    return _cerebras_headers
+        genai.configure(api_key=api_key)
+        model_name = os.environ.get(
+            "GOOGLE_AISTUDIO_MODELS_PRIORITY", "gemini-1.5-flash-latest"
+        ).split(";")[0]
+        _google_model = genai.GenerativeModel(model_name)
+    return _google_model
 
 
 def get_groq_headers():
@@ -59,59 +42,36 @@ def get_groq_headers():
 
 
 # --- Modelos e Configurações ---
-GOOGLE_AISTUDIO_MODELS = os.environ.get(
-    "GOOGLE_AISTUDIO_MODELS_PRIORITY", "gemini-1.5-flash-latest;gemma-2-9b-it"
-).split(";")
-CEREBRAS_MODELS = os.environ.get("CEREBRAS_MODELS_PRIORITY", "btlm-3b-8k-base").split(
-    ";"
-)
 GROQ_MODELS = os.environ.get("GROQ_MODELS_PRIORITY", "llama3-8b-8192").split(";")
-
 timeout = aiohttp.ClientTimeout(total=90)
 
-# --- Funções de Requisição (Agora usam os Getters) ---
 
-
+# --- Funções de Requisição ---
 async def google_aistudio_request(messages):
-    google_client = get_google_client()
-    if not google_client:
+    model = get_google_model()
+    if not model:
         return None
-
-    model_name = GOOGLE_AISTUDIO_MODELS[0]  # Usando o primeiro da lista de prioridade
     try:
-        model = google_client.get_model(f"models/{model_name}")
-        response = await model.generate_content_async(messages)
+        google_formatted_messages = [
+            {"role": msg["role"], "parts": [msg["content"]]} for msg in messages
+        ]
+
+        generation_config = genai.types.GenerationConfig()
+
+        response = await model.generate_content_async(
+            google_formatted_messages,
+            generation_config=generation_config,
+        )
         return response.text.strip()
     except Exception:
         log_exception()
         return None
 
 
-async def cerebras_request(messages):
-    headers = get_cerebras_headers()
-    if not headers:
-        return None
-
-    model = CEREBRAS_MODELS[0]
-    try:
-        async with aiohttp.ClientSession(headers=headers, timeout=timeout) as session:
-            async with session.post(
-                "https://api.cerebras.ai/v1/chat/completions",
-                json={"model": model, "messages": messages},
-            ) as response:
-                if response.status == 200:
-                    json_response = await response.json()
-                    return json_response["choices"][0]["message"]["content"].strip()
-    except Exception:
-        log_exception()
-    return None
-
-
 async def groq_request(messages):
     headers = get_groq_headers()
     if not headers:
         return None
-
     model = GROQ_MODELS[0]
     try:
         async with aiohttp.ClientSession(headers=headers, timeout=timeout) as session:
@@ -129,11 +89,9 @@ async def groq_request(messages):
 
 async def llm_prompt(messages):
     """Tenta provedores de LLM em ordem de prioridade."""
-    # Defina a ordem de preferência aqui
     providers = [
         ("GOOGLE AISTUDIO", google_aistudio_request),
         ("GROQ", groq_request),
-        ("CEREBRAS", cerebras_request),
     ]
 
     for name, func in providers:
@@ -146,4 +104,14 @@ async def llm_prompt(messages):
             log_exception()
 
     print("AVISO: Todos os provedores de LLM falharam.")
-    return "O mestre da masmorra está momentaneamente sem palavras."
+    return json.dumps(
+        {
+            "narrativa": "O mestre da masmorra está momentaneamente sem palavras. Um silêncio ecoa pelo vazio...",
+            "evento": {
+                "tipo": "dialogo",
+                "danoRecebido": 0,
+                "danoCausado": 0,
+                "vitoria": False,
+            },
+        }
+    )

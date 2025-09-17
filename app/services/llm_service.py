@@ -77,10 +77,10 @@ async def continue_narrative(
     player_action: str,
     memory: str,
 ) -> str:
-    """Continua a narrativa com base na ação do jogador."""
+    """Continua a narrativa e retorna um JSON estruturado."""
     history_str = "\n".join(history)
     prompt = f"""
-    Você é um Mestre de RPG talentoso. Continue a narrativa da batalha com base na ação do jogador.
+    Você é um mestre de RPG. Sua tarefa é continuar a história e retornar a resposta em formato JSON.
 
     Personagem: {character['name']}, um(a) {character['race']} da classe {character['char_class']}.
     Tema da Batalha: "{battle_theme}"
@@ -97,11 +97,25 @@ async def continue_narrative(
 
     Ação do Jogador: "{player_action}"
 
-    Instruções:
-    1. Descreva o resultado da ação do jogador de forma dramática.
-    2. Narre a reação ou o contra-ataque do inimigo.
-    3. Mantenha a história fluindo. Não termine a batalha a menos que a ação do jogador seja claramente final.
-    4. A narrativa deve ser apenas a continuação da história, sem saudações ou comentários para o jogador.
+    Instruções de Resposta:
+    Responda OBRIGATORIAMENTE com um objeto JSON. O JSON deve ter duas chaves: "narrativa" e "evento".
+    - "narrativa": (string) Uma descrição dramática do resultado da ação do jogador e da reação do inimigo.
+    - "evento": (objeto) Um objeto com os detalhes do turno.
+      - "tipo": (string) Sempre "combate".
+      - "danoRecebido": (integer) Dano que o jogador recebeu. Coloque 0 se não houve dano.
+      - "danoCausado": (integer) Dano que o inimigo recebeu. Coloque 0 se não houve dano.
+      - "vitoria": (boolean) Coloque 'true' se o inimigo foi derrotado, ou 'false' caso contrário.
+
+    Exemplo de Resposta JSON:
+    {{
+      "narrativa": "Você avança pelas sombras e crava sua adaga nas costas do sentinela, que cai sem emitir som. O caminho agora está livre.",
+      "evento": {{
+        "tipo": "combate",
+        "danoRecebido": 0,
+        "danoCausado": 150,
+        "vitoria": true
+      }}
+    }}
     """
     messages = [{"role": "user", "content": prompt}]
     return await llm_prompt(messages)
