@@ -17,3 +17,4 @@ google-generativeai
 aiohttp
 sentence-transformers
 model2vec
+einops
