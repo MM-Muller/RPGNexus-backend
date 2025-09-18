@@ -48,7 +48,7 @@ async def generate_initial_narrative(
 ) -> str:
     """Gera a primeira narrativa para uma nova batalha."""
     prompt = f"""
-    Você é um Mestre de RPG talentoso. Sua tarefa é iniciar uma batalha épica.
+    Você é um Mestre de RPG talentoso. Sua tarefa é iniciar uma batalha épica de forma concisa.
     
     Personagem: {character['name']}, um(a) {character['race']} da classe {character['char_class']}.
     Descrição do Personagem: {character.get('description', 'Nenhuma.')}
@@ -61,9 +61,9 @@ async def generate_initial_narrative(
     ---
 
     Instruções:
-    1. Descreva o cenário de forma vívida e imersiva.
+    1. Descreva o cenário de forma vívida e imersiva em no máximo 8 frases.
     2. Introduza um inimigo que se encaixe no tema da batalha.
-    3. A narrativa deve terminar em um momento de tensão, preparando o jogador para agir.
+    3. A narrativa deve ser curta e terminar em um momento de tensão, preparando o jogador para agir.
     4. Seja criativo! Se o personagem já enfrentou inimigos parecidos, faça uma referência sutil.
     """
     messages = [{"role": "user", "content": prompt}]
@@ -98,8 +98,8 @@ async def continue_narrative(
     Ação do Jogador: "{player_action}"
 
     Instruções de Resposta:
-    Responda OBRIGATORIAMENTE com um objeto JSON. O JSON deve ter duas chaves: "narrativa" e "evento".
-    - "narrativa": (string) Uma descrição dramática do resultado da ação do jogador e da reação do inimigo.
+    Responda OBRIGATORIAMENTE com um objeto JSON. A história deve ser curta e direta. O JSON deve ter duas chaves: "narrativa" e "evento".
+    - "narrativa": (string) Uma descrição dramática e curta (máximo 4 frases) do resultado da ação do jogador e da reação do inimigo.
     - "evento": (objeto) Um objeto com os detalhes do turno.
       - "tipo": (string) Sempre "combate".
       - "danoRecebido": (integer) Dano que o jogador recebeu. Coloque 0 se não houve dano.
