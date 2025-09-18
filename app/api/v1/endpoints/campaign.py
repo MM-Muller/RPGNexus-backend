@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import List
 from motor.motor_asyncio import AsyncIOMotorDatabase
-import json  # Importe o JSON
+import re
 
 from app.api import deps
 from app.crud import character as crud_character
@@ -23,6 +23,25 @@ class ActionPayload(BaseModel):
     battle_theme: str
     action: str
     history: List[str]
+
+
+def parse_llm_response(response_str: str):
+    narrative = response_str
+    event = {"tipo": "dialogo", "danoRecebido": 0, "danoCausado": 0, "vitoria": False}
+
+    match = re.search(
+        r"\[DANO_CAUSADO:(\d+),DANO_RECEBIDO:(\d+),VITORIA:(true|false)\]", response_str
+    )
+    if match:
+        narrative = response_str.split("[")[0].strip()
+        event = {
+            "tipo": "combate",
+            "danoCausado": int(match.group(1)),
+            "danoRecebido": int(match.group(2)),
+            "vitoria": match.group(3).lower() == "true",
+        }
+
+    return narrative, event
 
 
 @router.post("/start_battle", summary="Inicia uma nova batalha com IA")
@@ -50,7 +69,12 @@ async def start_battle(
         f"Narrador (Início da Batalha: {payload.battle_theme}): {narrative}",
     )
 
-    initial_event = {"tipo": "inicio", "danoRecebido": 0, "danoCausado": 0}
+    initial_event = {
+        "tipo": "inicio",
+        "danoRecebido": 0,
+        "danoCausado": 0,
+        "vitoria": False,
+    }
 
     return {"narrativa": narrative, "evento": initial_event}
 
@@ -72,19 +96,11 @@ async def take_action(
         character_id=payload.character_id, query=context_query
     )
 
-    json_response_str = await llm_service.continue_narrative(
+    response_str = await llm_service.continue_narrative(
         char, payload.battle_theme, payload.history, payload.action, memory
     )
 
-    try:
-        response_data = json.loads(json_response_str)
-        narrative = response_data.get(
-            "narrativa", "Ação processada, mas a narrativa falhou."
-        )
-        event = response_data.get("evento", {"tipo": "dialogo"})
-    except (json.JSONDecodeError, TypeError):
-        narrative = json_response_str
-        event = {"tipo": "dialogo", "danoRecebido": 0, "danoCausado": 0}
+    narrative, event = parse_llm_response(response_str)
 
     llm_service.save_interaction(payload.character_id, f"Jogador: {payload.action}")
     llm_service.save_interaction(payload.character_id, f"Narrador: {narrative}")

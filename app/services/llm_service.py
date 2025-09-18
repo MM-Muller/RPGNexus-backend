@@ -4,6 +4,7 @@ from sentence_transformers import CrossEncoder
 from model2vec import StaticModel
 import uuid
 from typing import List
+import re
 
 # Importe a função de LLM do seu novo arquivo
 from app.core.free_llms import llm_prompt
@@ -48,7 +49,7 @@ async def generate_initial_narrative(
 ) -> str:
     """Gera a primeira narrativa para uma nova batalha."""
     prompt = f"""
-    Você é um Mestre de RPG talentoso. Sua tarefa é iniciar uma batalha épica de forma concisa.
+    Você é um Mestre de RPG talentoso. Sua tarefa é iniciar uma batalha épica com uma narrativa envolvente e dinâmica.
     
     Personagem: {character['name']}, um(a) {character['race']} da classe {character['char_class']}.
     Descrição do Personagem: {character.get('description', 'Nenhuma.')}
@@ -61,10 +62,10 @@ async def generate_initial_narrative(
     ---
 
     Instruções:
-    1. Descreva o cenário de forma vívida e imersiva em no máximo 8 frases.
-    2. Introduza um inimigo que se encaixe no tema da batalha.
-    3. A narrativa deve ser curta e terminar em um momento de tensão, preparando o jogador para agir.
-    4. Seja criativo! Se o personagem já enfrentou inimigos parecidos, faça uma referência sutil.
+    1. Descreva o cenário de forma vívida, em um parágrafo conciso de 2 a 3 frases de tamanho médio.
+    2. Introduza um inimigo que se encaixe perfeitamente no tema da batalha.
+    3. A narrativa deve terminar em um momento de tensão, preparando o jogador para a sua primeira ação.
+    4. Cada parágrafo deve começar com um recuo de doze espaços.
     """
     messages = [{"role": "user", "content": prompt}]
     return await llm_prompt(messages)
@@ -77,10 +78,10 @@ async def continue_narrative(
     player_action: str,
     memory: str,
 ) -> str:
-    """Continua a narrativa e retorna um JSON estruturado."""
+    """Continua a narrativa e retorna um texto simples."""
     history_str = "\n".join(history)
     prompt = f"""
-    Você é um mestre de RPG. Sua tarefa é continuar a história e retornar a resposta em formato JSON.
+    Você é um mestre de RPG. Sua tarefa é continuar a história de forma clara, dinâmica e que prenda a atenção do jogador.
 
     Personagem: {character['name']}, um(a) {character['race']} da classe {character['char_class']}.
     Tema da Batalha: "{battle_theme}"
@@ -98,24 +99,18 @@ async def continue_narrative(
     Ação do Jogador: "{player_action}"
 
     Instruções de Resposta:
-    Responda OBRIGATORIAMENTE com um objeto JSON. A história deve ser curta e direta. O JSON deve ter duas chaves: "narrativa" e "evento".
-    - "narrativa": (string) Uma descrição dramática e curta (máximo 4 frases) do resultado da ação do jogador e da reação do inimigo.
-    - "evento": (objeto) Um objeto com os detalhes do turno.
-      - "tipo": (string) Sempre "combate".
-      - "danoRecebido": (integer) Dano que o jogador recebeu. Coloque 0 se não houve dano.
-      - "danoCausado": (integer) Dano que o inimigo recebeu. Coloque 0 se não houve dano.
-      - "vitoria": (boolean) Coloque 'true' se o inimigo foi derrotado, ou 'false' caso contrário.
+    1. Descreva o resultado da ação do jogador em um parágrafo curto e impactante (2-3 frases de tamanho médio).
+    2. Em seguida, descreva a reação e o contra-ataque do inimigo em outro parágrafo igualmente dinâmico (2-3 frases de tamanho médio). O inimigo deve sempre atacar de volta.
+    3. Cada parágrafo deve começar em uma nova linha com um recuo de doze espaços.
+    4. No final da narrativa, adicione uma linha especial no formato: `[DANO_CAUSADO:X,DANO_RECEBIDO:Y,VITORIA:Z]`
+        - `DANO_CAUSADO` (X): É o dano que o JOGADOR causou ao INIMIGO.
+        - `DANO_RECEBIDO` (Y): É o dano que o INIMIGO causou ao JOGADOR.
+        - `VITORIA` (Z): É 'true' se o inimigo foi derrotado, ou 'false' caso contrário.
 
-    Exemplo de Resposta JSON:
-    {{
-      "narrativa": "Você avança pelas sombras e crava sua adaga nas costas do sentinela, que cai sem emitir som. O caminho agora está livre.",
-      "evento": {{
-        "tipo": "combate",
-        "danoRecebido": 0,
-        "danoCausado": 150,
-        "vitoria": true
-      }}
-    }}
+    Exemplo de Resposta:
+            Com um movimento rápido e preciso, você avança pelas sombras e crava sua adaga profundamente nas costas do sentinela, que emite um som metálico de dor. A lâmina encontra resistência, mas perfura a armadura.
+            O sentinela, embora ferido, reage instantaneamente. Ele gira sobre seus calcanhares com uma velocidade surpreendente e desfere um golpe poderoso com seu bastão de energia que atinge seu ombro.
+    [DANO_CAUSADO:80,DANO_RECEBIDO:25,VITORIA:false]
     """
     messages = [{"role": "user", "content": prompt}]
     return await llm_prompt(messages)
