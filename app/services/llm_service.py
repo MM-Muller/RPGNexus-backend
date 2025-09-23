@@ -5,6 +5,7 @@ from model2vec import StaticModel
 import uuid
 from typing import List
 import re
+import random
 
 # Importe a função de LLM do seu novo arquivo
 from app.core.free_llms import llm_prompt
@@ -80,6 +81,27 @@ async def continue_narrative(
 ) -> str:
     """Continua a narrativa e retorna um texto simples."""
     history_str = "\n".join(history)
+
+    player_damage = character["attributes"]["strength"] * random.randint(5, 10)
+    enemy_damage = random.randint(10, 20)
+
+    # Simula um ataque especial
+    if "especial" in player_action.lower() or "habilidade" in player_action.lower():
+        player_damage *= 2
+
+    # Simula a chance de esquiva
+    player_dodge_chance = character["attributes"]["dexterity"] * 2
+    enemy_dodge_chance = 10
+
+    player_dodged = random.randint(1, 100) <= player_dodge_chance
+    enemy_dodged = random.randint(1, 100) <= enemy_dodge_chance
+
+    if enemy_dodged:
+        player_damage = 0
+
+    if player_dodged:
+        enemy_damage = 0
+
     prompt = f"""
     Você é um mestre de RPG. Sua tarefa é continuar a história de forma clara, dinâmica e que prenda a atenção do jogador.
 
@@ -98,19 +120,42 @@ async def continue_narrative(
 
     Ação do Jogador: "{player_action}"
 
+    Cálculo da Rodada:
+    - Dano que o Jogador causa: {player_damage}
+    - Dano que o Inimigo causa: {enemy_damage}
+    - Jogador esquivou do golpe inimigo: {player_dodged}
+    - Inimigo esquivou do golpe do jogador: {enemy_dodged}
+
     Instruções de Resposta:
-    1. Descreva o resultado da ação do jogador em um parágrafo curto e impactante (2-3 frases de tamanho médio).
-    2. Em seguida, descreva a reação e o contra-ataque do inimigo em outro parágrafo igualmente dinâmico (2-3 frases de tamanho médio). O inimigo deve sempre atacar de volta.
+    1. Descreva o resultado da ação do jogador em um parágrafo curto e impactante (2-3 frases de tamanho médio). Mencione se a ação foi esquivada.
+    2. Em seguida, descreva a reação e o contra-ataque do inimigo em outro parágrafo igualmente dinâmico (2-3 frases de tamanho médio). Mencione se o contra-ataque foi esquivado. O inimigo deve sempre atacar de volta.
     3. Cada parágrafo deve começar em uma nova linha com um recuo de doze espaços.
-    4. No final da narrativa, adicione uma linha especial no formato: `[DANO_CAUSADO:X,DANO_RECEBIDO:Y,VITORIA:Z]`
-        - `DANO_CAUSADO` (X): É o dano que o JOGADOR causou ao INIMIGO.
-        - `DANO_RECEBIDO` (Y): É o dano que o INIMIGO causou ao JOGADOR.
-        - `VITORIA` (Z): É 'true' se o inimigo foi derrotado, ou 'false' caso contrário.
+    4. No final da narrativa, adicione uma linha especial no formato: `[DANO_CAUSADO:{player_damage},DANO_RECEBIDO:{enemy_damage},VITORIA:Z]`
+        - `VITORIA` (Z): É 'true' se o inimigo foi derrotado, ou 'false' caso contrário. A LLM deve determinar isso com base na narrativa, sem usar valores numéricos.
+    """
+    messages = [{"role": "user", "content": prompt}]
+    return await llm_prompt(messages)
+
+
+async def generate_action_suggestions(battle_theme: str, history: List[str]) -> str:
+    """Gera sugestões de ação contextuais para o jogador."""
+    history_str = "\n".join(history)
+    prompt = f"""
+    Você é um Mestre de RPG. Sua tarefa é fornecer 3 sugestões de ações curtas e concisas para o jogador, baseadas no contexto da batalha.
+    
+    Tema da Batalha: "{battle_theme}"
+    Histórico da Batalha Atual:
+    ---
+    {history_str}
+    ---
+    
+    Instruções:
+    1. As sugestões devem ser relevantes para a situação e o tipo de inimigo.
+    2. As sugestões devem ser de uma palavra ou frase curta, como "Atacar com Fúria", "Analisar Ponto Fraco", "Fugir para as Sombras".
+    3. Separe cada sugestão com um pipe '|'.
 
     Exemplo de Resposta:
-            Com um movimento rápido e preciso, você avança pelas sombras e crava sua adaga profundamente nas costas do sentinela, que emite um som metálico de dor. A lâmina encontra resistência, mas perfura a armadura.
-            O sentinela, embora ferido, reage instantaneamente. Ele gira sobre seus calcanhares com uma velocidade surpreendente e desfere um golpe poderoso com seu bastão de energia que atinge seu ombro.
-    [DANO_CAUSADO:80,DANO_RECEBIDO:25,VITORIA:false]
+    Atacar o núcleo|Analisar os padrões de ataque|Usar cobertura
     """
     messages = [{"role": "user", "content": prompt}]
     return await llm_prompt(messages)

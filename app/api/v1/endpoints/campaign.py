@@ -25,6 +25,12 @@ class ActionPayload(BaseModel):
     history: List[str]
 
 
+class SuggestionsPayload(BaseModel):
+    character_id: str
+    battle_theme: str
+    history: List[str]
+
+
 def parse_llm_response(response_str: str):
     narrative = response_str
     event = {"tipo": "dialogo", "danoRecebido": 0, "danoCausado": 0, "vitoria": False}
@@ -106,3 +112,18 @@ async def take_action(
     llm_service.save_interaction(payload.character_id, f"Narrador: {narrative}")
 
     return {"narrativa": narrative, "evento": event}
+
+
+@router.post("/suggestions", summary="Obtém sugestões de ação da LLM")
+async def get_action_suggestions(
+    payload: SuggestionsPayload,
+    current_user=Depends(deps.get_current_user),
+):
+    try:
+        suggestions_str = await llm_service.generate_action_suggestions(
+            payload.battle_theme, payload.history
+        )
+        suggestions = [s.strip() for s in suggestions_str.split("|")]
+        return {"suggestions": suggestions}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
