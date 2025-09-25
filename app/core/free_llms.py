@@ -99,19 +99,6 @@ async def llm_prompt(messages):
             response = await func(messages)
             if response:
                 print(f"Usado com sucesso: {name}")
-                return response
+                return response.strip("`").strip()
         except Exception:
             log_exception()
-
-    print("AVISO: Todos os provedores de LLM falharam.")
-    return json.dumps(
-        {
-            "narrativa": "O mestre da masmorra está momentaneamente sem palavras. Um silêncio ecoa pelo vazio...",
-            "evento": {
-                "tipo": "dialogo",
-                "danoRecebido": 0,
-                "danoCausado": 0,
-                "vitoria": False,
-            },
-        }
-    )
