@@ -3,11 +3,9 @@ from chromadb import Documents, EmbeddingFunction, Embeddings
 from sentence_transformers import CrossEncoder
 from model2vec import StaticModel
 import uuid
-from typing import List
+from typing import List, Dict, Any, Optional
 import re
 import random
-
-# Importe a função de LLM do seu novo arquivo
 from app.core.free_llms import llm_prompt
 
 # --- Configuração do Modelo de Embedding ---
@@ -187,5 +185,5 @@ def retrieve_memory(character_id: str, query: str, top_k=10) -> str:
         return "Nenhuma memória relevante encontrada."
 
     # Refina os resultados com o reranker para obter o melhor contexto
-    relevant_memories = rerank_context(query, documents[0])
-    return "\n".join(relevant_memories)
+    relevant_memories = reranker.rank(query, documents[0], return_documents=True)[:5]
+    return "\n".join([r["text"] for r in relevant_memories])
