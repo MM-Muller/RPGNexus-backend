@@ -193,8 +193,8 @@ async def websocket_endpoint(
         return
 
     try:
-        battle_state_doc = await crud_battle.get_battle_state(
-            db, character_id, battle_id
+        battle_state_doc = await crud_battle.get_battle_state_by_character_and_user(
+            db, character_id, battle_id, str(current_user["_id"])
         )
         if battle_state_doc:
             serialized_doc = serialize_object_id(battle_state_doc)
@@ -232,7 +232,9 @@ async def websocket_endpoint(
                 "enemy_health": 450,
                 "last_updated": datetime.utcnow().isoformat(),
             }
-            await crud_battle.save_battle_state(db, initial_state)
+            await crud_battle.save_battle_state(
+                db, {**initial_state, "user_id": str(current_user["_id"])}
+            )
 
             await websocket.send_json(
                 {"type": "narrative_end", "payload": {"event": {}}}
@@ -313,3 +315,27 @@ async def websocket_endpoint(
     except Exception as e:
         print(f"Erro no WebSocket: {e}")
         await websocket.close(code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@router.get(
+    "/most-recent-state/{character_id}",
+    summary="Retorna o estado de batalha mais recente de um personagem.",
+)
+async def get_most_recent_battle_state(
+    character_id: str,
+    db: AsyncIOMotorDatabase = Depends(deps.get_db),
+    current_user=Depends(deps.get_current_user),
+):
+    char_from_db = await crud_character.get_character_by_id(db, character_id)
+    if not char_from_db or str(char_from_db["user_id"]) != str(current_user["_id"]):
+        raise HTTPException(status_code=403, detail="Acesso negado.")
+
+    battle_state = await crud_battle.get_most_recent_battle_state(
+        db, character_id, str(current_user["_id"])
+    )
+    if not battle_state:
+        raise HTTPException(
+            status_code=404, detail="Nenhum estado de batalha encontrado."
+        )
+
+    return serialize_object_id(battle_state)
