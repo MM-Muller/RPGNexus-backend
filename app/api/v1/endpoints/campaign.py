@@ -158,7 +158,19 @@ async def get_action_suggestions(
         suggestions_str = await llm_service.generate_action_suggestions(
             payload.battle_theme, payload.history
         )
-        suggestions = [s.strip() for s in suggestions_str.split("|")]
+        # Usa regex para encontrar uma lista de sugestões separadas por '|' ou em formato de lista
+        match = re.search(r"([^\n]+)\|([^\n]+)\|([^\n]+)", suggestions_str)
+        if match:
+            suggestions = [
+                match.group(1).strip(),
+                match.group(2).strip(),
+                match.group(3).strip(),
+            ]
+        else:
+            suggestions = [s.strip() for s in suggestions_str.split("\n") if s.strip()][
+                :3
+            ]
+
         return {"suggestions": suggestions}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
