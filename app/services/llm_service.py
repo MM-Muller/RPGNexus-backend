@@ -42,13 +42,12 @@ def rerank_context(query: str, texts: List[str], top_k=5) -> List[str]:
 
 # --- Funções de Interação com a LLM ---
 
-
 async def generate_initial_narrative(
     character: dict, battle_theme: str, memory: str
 ) -> str:
     """Gera a primeira narrativa para uma nova batalha."""
     prompt = f"""
-    Você é um Mestre de RPG talentoso. Sua tarefa é iniciar uma batalha épica com uma narrativa envolvente e dinâmica.
+    Você é um Mestre de RPG talentoso. Sua tarefa é iniciar uma batalha épica com uma narrativa envolvente e dinâmica, em um único texto contínuo.
     
     Personagem: {character['name']}, um(a) {character['race']} da classe {character['char_class']}.
     Descrição do Personagem: {character.get('description', 'Nenhuma.')}
@@ -61,10 +60,10 @@ async def generate_initial_narrative(
     ---
 
     Instruções:
-    1. Descreva o cenário de forma vívida, em um parágrafo conciso de 2 a 3 frases de tamanho médio.
-    2. Introduza um inimigo que se encaixe perfeitamente no tema da batalha.
-    3. A narrativa deve terminar em um momento de tensão, preparando o jogador para a sua primeira ação.
-    4. Cada parágrafo deve começar com um recuo de doze espaços.
+    1. Comece descrevendo o cenário de forma vívida.
+    2. Em seguida, introduza um inimigo que se encaixe no tema da batalha.
+    3. Termine a narrativa em um momento de tensão, preparando o jogador para sua primeira ação.
+    4. IMPORTANTE: Sua resposta deve ser APENAS a narrativa em texto puro. NÃO inclua títulos, marcadores ou qualquer texto que não seja parte da história (como "Cenário:", "O Inimigo:", etc.).
     """
     messages = [{"role": "user", "content": prompt}]
     return await llm_prompt(messages)
@@ -125,11 +124,10 @@ async def continue_narrative(
     - Inimigo esquivou do golpe do jogador: {enemy_dodged}
 
     Instruções de Resposta:
-    1. Descreva o resultado da ação do jogador em um parágrafo curto e impactante (2-3 frases de tamanho médio). Mencione se a ação foi esquivada.
-    2. Em seguida, descreva a reação e o contra-ataque do inimigo em outro parágrafo igualmente dinâmico (2-3 frases de tamanho médio). Mencione se o contra-ataque foi esquivado. O inimigo deve sempre atacar de volta.
-    3. Cada parágrafo deve começar em uma nova linha com um recuo de doze espaços.
-    4. No final da narrativa, adicione uma linha especial no formato: `[DANO_CAUSADO:{player_damage},DANO_RECEBIDO:{enemy_damage},VITORIA:Z]`
-        - `VITORIA` (Z): É 'true' se o inimigo foi derrotado, ou 'false' caso contrário. A LLM deve determinar isso com base na narrativa, sem usar valores numéricos.
+    1. Descreva o resultado da ação do jogador e, em seguida, a reação e o contra-ataque do inimigo.
+    2. A sua resposta deve ser APENAS a narrativa em texto puro.
+    3. NÃO inclua títulos como "Resultado da Ação do Jogador" ou "Reação do Inimigo". Apenas o texto corrido.
+    4. No final da sua resposta, adicione a seguinte linha especial, sem pular linha: `[DANO_CAUSADO:{player_damage},DANO_RECEBIDO:{enemy_damage}]`
     """
     messages = [{"role": "user", "content": prompt}]
     return await llm_prompt(messages)

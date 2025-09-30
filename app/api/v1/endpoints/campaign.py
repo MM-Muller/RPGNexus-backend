@@ -70,20 +70,17 @@ def parse_llm_response(response_str: str):
     narrative = response_str
     event = {"tipo": "dialogo", "danoRecebido": 0, "danoCausado": 0, "vitoria": False}
 
-    match = re.search(
-        r"\[DANO_CAUSADO:(\d+),DANO_RECEBIDO:(\d+),VITORIA:(true|false)\]", response_str
-    )
+    match = re.search(r"\[DANO_CAUSADO:(\d+),DANO_RECEBIDO:(\d+)\]", response_str)
     if match:
         narrative = response_str.split("[")[0].strip()
         event = {
             "tipo": "combate",
             "danoCausado": int(match.group(1)),
             "danoRecebido": int(match.group(2)),
-            "vitoria": match.group(3).lower() == "true",
+            "vitoria": False,  
         }
 
     return narrative, event
-
 
 @router.post("/start_battle", summary="Inicia uma nova batalha com IA")
 async def start_battle(
@@ -294,13 +291,27 @@ async def websocket_endpoint(
                     - event.get("danoCausado", 0),
                     "last_updated": datetime.utcnow().isoformat(),
                 }
+                if updated_state["enemy_health"] <= 0 or updated_state["player_health"] <= 0:
+                    event["vitoria"] = updated_state["enemy_health"] <= 0
+                
                 await crud_battle.save_battle_state(
                     db, {**current_state_doc, **updated_state}
                 )
 
-                await websocket.send_json(
-                    {"type": "narrative_chunk", "payload": narrative}
-                )
+                # Avisa o frontend que uma nova resposta do narrador está começando
+                await websocket.send_json({"type": "narrator_turn_start"})
+                await asyncio.sleep(0.1) # Um pequeno delay para garantir a ordem
+
+                sentences = re.split(r'(?<=[.!?])\s+', narrative.strip())
+                for i, sentence in enumerate(sentences):
+                    payload = sentence + " " if i < len(sentences) - 1 else sentence
+                    if payload:
+                        await websocket.send_json(
+                            {"type": "narrative_chunk", "payload": payload}
+                        )
+                        await asyncio.sleep(min(len(payload) * 0.02, 1.5))
+
+                # Envia a mensagem de finalização com o evento da rodada
                 await websocket.send_json(
                     {"type": "narrative_end", "payload": {"event": event}}
                 )
