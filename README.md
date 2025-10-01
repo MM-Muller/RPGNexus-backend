@@ -63,37 +63,41 @@ O servidor estará disponível em `http://localhost:8000`.
 
 ## 📜 Documentação da API
 
-A API segue os padrões REST e a documentação interativa está disponível em:
+A documentação interativa da API é gerada automaticamente pelo FastAPI e pode ser acedida através dos seguintes URLs:
 
 - **Swagger UI:** `http://localhost:8000/docs`
 - **ReDoc:** `http://localhost:8000/redoc`
 
-### Endpoints Disponíveis
+## Endpoints Disponíveis
 
-#### Autenticação (`/api/v1/auth`)
+Todos os endpoints estão prefixados com `/api/v1`.
 
-- **`POST /signup`**: Cria uma nova conta de usuário.
-- **`POST /login`**: Autentica um usuário e retorna um token JWT.
-- **`GET /me`**: Retorna os dados do usuário autenticado.
+### Autenticação (`/auth`)
 
-#### Personagens (`/api/v1/characters`)
+- `POST /signup`: Regista um novo utilizador.
+- `POST /login`: Autentica um utilizador e retorna um token de acesso.
 
-- **`POST /`**: Cria um novo personagem para o usuário autenticado.
-- **`GET /`**: Lista todos os personagens do usuário autenticado.
-- **`GET /{character_id}`**: (A ser implementado) Obtém os detalhes de um personagem específico.
-- **`DELETE /{character_id}`**: Deleta um personagem do usuário autenticado.
+### Utilizadores (`/users`)
 
-#### Campanha (`/api/v1/campanha`)
+- `GET /me`: Obtém as informações do utilizador autenticado.
 
-- **`POST /`**: (A ser implementado) Inicia uma nova campanha.
-- **`GET /{id}`**: (A ser implementado) Retorna o estado atual da campanha.
-- **`POST /{id}/acao`**: (A ser implementado) Envia uma ação do jogador e retorna a resposta do LLM.
-- **`DELETE /{id}`**: (A ser implementado) Encerra uma campanha.
+### Personagens (`/characters`)
 
-#### Histórico (`/api/v1/historico`)
+- `POST /`: Cria um novo personagem.
+- `GET /`: Retorna todos os personagens do utilizador autenticado.
+- `DELETE /{character_id}`: Apaga um personagem.
+- `POST /{character_id}/add-xp`: Adiciona pontos de experiência a um personagem.
+- `POST /{character_id}/inventory`: Adiciona um item ao inventário do personagem.
+- `GET /{character_id}/progress`: Obtém o progresso do personagem.
+- `PUT /{character_id}/progress`: Atualiza o progresso do personagem.
 
-- **`GET /{campanha_id}`**: (A ser implementado) Retorna o histórico de interações de uma campanha.
-- **`DELETE /{campanha_id}`**: (A ser implementado) Limpa o histórico.
+### Campanha (`/campaign`)
+
+- `POST /start_battle`: Inicia uma nova batalha para um personagem.
+- `POST /action`: Envia a ação de um jogador durante uma batalha.
+- `GET /most-recent-state/{character_id}`: Obtém o estado mais recente da batalha para um personagem.
+- `POST /suggestions`: Obtém sugestões de ações geradas pela IA para a batalha.
+- `WS /ws/battle/{character_id}/{battle_id}`: Endpoint WebSocket para comunicação em tempo real durante a batalha.
 
 ---
 
@@ -102,17 +106,18 @@ A API segue os padrões REST e a documentação interativa está disponível em:
 A estrutura do projeto foi organizada para separar as responsabilidades, facilitando a manutenção e escalabilidade da API.
 ```
 /
-├── app/                  # Contém todo o código fonte da aplicação
-│   ├── api/              # Módulos da API (endpoints, dependências)
+├── app/                    # Contém todo o código fonte da aplicação
+│   ├── api/                # Módulos da API (endpoints, dependências)
+│   │   ├── deps.py         # Centraliza a injeção de dependências para segurança e acesso aos bancos de dados.
 │   │   └── v1/
 │   │       ├── endpoints/  # Arquivos com os endpoints (auth, users, characters)
 │   │       └── router.py   # Roteador principal da API v1
-│   ├── core/             # Configurações, segurança e lógica principal
-│   ├── crud/             # Funções de interação com o banco de dados (Create, Read, Update, Delete)
-│   ├── schemas/          # Modelos de dados Pydantic para validação e serialização
-│   └── main.py           # Ponto de entrada da aplicação FastAPI
-├── .devcontainer/        # Configurações do Dev Container
-├── .env.example          # Arquivo de exemplo para variáveis de ambiente
-├── requirements.txt      # Dependências de produção
-└── requirements-dev.txt  # Dependências de desenvolvimento
+│   ├── core/               # Configurações, segurança e lógica principal
+│   ├── crud/               # Funções de interação com o banco de dados (Create, Read, Update, Delete)
+│   ├── schemas/            # Modelos de dados Pydantic para validação e serialização
+│   └── main.py             # Ponto de entrada da aplicação FastAPI
+├── .devcontainer/          # Configurações do Dev Container
+├── .env.example            # Arquivo de exemplo para variáveis de ambiente
+├── requirements.txt        # Dependências de produção
+└── requirements-dev.txt    # Dependências de desenvolvimento
 ```
