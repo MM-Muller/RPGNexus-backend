@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 
 
 class Attributes(BaseModel):
@@ -21,6 +21,7 @@ class CharacterCreate(BaseModel):
     level: int = 1
     experience: int = 0
     campaign_progress: Dict[str, bool] = {}
+    inventory: List[str] = []
 
     class Config:
         populate_by_name = True

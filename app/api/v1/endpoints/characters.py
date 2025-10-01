@@ -5,7 +5,7 @@ from app.api import deps
 from app.schemas.character import CharacterCreate
 from app.crud import character as crud_character
 from app.core.leveling import get_xp_for_next_level
-from typing import Dict
+from typing import Dict, List 
 
 router = APIRouter()
 
@@ -17,6 +17,8 @@ class ExperiencePayload(BaseModel):
 class ProgressPayload(BaseModel):
     progress: Dict[str, bool]
 
+class InventoryPayload(BaseModel): 
+    item: str 
 
 def character_helper(character) -> dict:
     """
@@ -36,6 +38,7 @@ def character_helper(character) -> dict:
         "level": character.get("level", 1),
         "experience": character.get("experience", 0),
         "campaign_progress": character.get("campaign_progress", {}),
+        "inventory": character.get("inventory", []),
     }
 
 
@@ -81,6 +84,25 @@ async def add_experience(
         "character": character_helper(updated_char),
         "leveled_up": leveled_up,
     }
+
+@router.post("/{character_id}/inventory", status_code=status.HTTP_200_OK)
+async def add_item_to_inventory(
+    character_id: str,
+    payload: InventoryPayload,
+    db: AsyncIOMotorDatabase = Depends(deps.get_db),
+    current_user=Depends(deps.get_current_user),
+):
+    char_from_db = await crud_character.get_character_by_id(db, character_id)
+
+    if not char_from_db or str(char_from_db.get("user_id")) != str(current_user["_id"]):
+        raise HTTPException(status_code=404, detail="Character not found")
+
+    # Adiciona o item ao inventário
+    await crud_character.update_character(
+        db, character_id, {"$push": {"inventory": payload.item}}
+    )
+
+    return {"message": "Item added to inventory"}
 
 
 @router.post("/")

@@ -2,17 +2,25 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.schemas.character import CharacterCreate
 from bson import ObjectId
 from typing import Dict, Any
+from pymongo import ReturnDocument
 
 
 async def get_character_by_id(db: AsyncIOMotorDatabase, character_id: str):
     return await db.characters.find_one({"_id": ObjectId(character_id)})
 
 
-async def update_character(
-    db: AsyncIOMotorDatabase, character_id: str, data: Dict[str, Any]
-):
-    await db.characters.update_one({"_id": ObjectId(character_id)}, {"$set": data})
-    return await get_character_by_id(db, character_id)
+async def update_character(db, character_id: str, update_data: dict):
+    """
+    Atualiza um personagem no banco de dados.
+    A atualização é feita diretamente com o dicionário `update_data`,
+    permitindo o uso de operadores do MongoDB como $set, $push, etc.
+    """
+    character = await db["characters"].find_one_and_update(
+        {"_id": ObjectId(character_id)},
+        update_data,  
+        return_document=ReturnDocument.AFTER
+    )
+    return character
 
 
 async def create_character(
