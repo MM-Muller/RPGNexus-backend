@@ -41,7 +41,6 @@ def character_helper(character) -> dict:
         "inventory": character.get("inventory", []),
     }
 
-
 @router.post("/{character_id}/add-xp", response_model=dict)
 async def add_experience(
     character_id: str,
@@ -56,24 +55,41 @@ async def add_experience(
 
     current_experience = char_from_db.get("experience", 0)
     current_level = char_from_db.get("level", 1)
-
-    char_from_db["experience"] = current_experience + payload.experience_points
-    char_from_db["level"] = current_level
-
+    
+    new_experience = current_experience + payload.experience_points
+    new_level = current_level
+    
     leveled_up = False
-    xp_needed = get_xp_for_next_level(char_from_db["level"])
+    xp_needed = get_xp_for_next_level(new_level)
 
-    while char_from_db["experience"] >= xp_needed:
+    attributes_to_increment = {}
+
+    while new_experience >= xp_needed:
         leveled_up = True
-        char_from_db["experience"] -= xp_needed
-        char_from_db["level"] += 1
+        new_experience -= xp_needed
+        new_level += 1
+        
+        if "attributes.strength" not in attributes_to_increment:
+            attributes_to_increment["attributes.strength"] = 0
+        attributes_to_increment["attributes.strength"] += 1
 
-        char_from_db["attributes"]["strength"] += 1
-        char_from_db["attributes"]["intelligence"] += 1
+        if "attributes.intelligence" not in attributes_to_increment:
+            attributes_to_increment["attributes.intelligence"] = 0
+        attributes_to_increment["attributes.intelligence"] += 1
+        
+        xp_needed = get_xp_for_next_level(new_level)
 
-        xp_needed = get_xp_for_next_level(char_from_db["level"])
+    update_payload = {
+        "$set": {
+            "experience": new_experience,
+            "level": new_level,
+        }
+    }
+    
+    if leveled_up:
+        update_payload["$inc"] = attributes_to_increment
 
-    updated_char = await crud_character.update_character(db, character_id, char_from_db)
+    updated_char = await crud_character.update_character(db, character_id, update_payload)
 
     return {
         "message": (
@@ -167,6 +183,6 @@ async def update_character_progress(
         raise HTTPException(status_code=404, detail="Character not found")
 
     updated_character = await crud_character.update_character(
-        db, character_id, {"campaign_progress": payload.progress}
+        db, character_id, {"$set": {"campaign_progress": payload.progress}}
     )
     return character_helper(updated_character)
