@@ -63,7 +63,8 @@ async def generate_initial_narrative(
     1. Comece descrevendo o cenário de forma vívida.
     2. Em seguida, introduza um inimigo que se encaixe no tema da batalha.
     3. Termine a narrativa em um momento de tensão, preparando o jogador para sua primeira ação.
-    4. IMPORTANTE: Sua resposta deve ser APENAS a narrativa em texto puro. NÃO inclua títulos, marcadores ou qualquer texto que não seja parte da história (como "Cenário:", "O Inimigo:", etc.).
+    4. Sua narrativa deve ter exatamente 3 parágrafos.
+    5. IMPORTANTE: Sua resposta deve ser APENAS a narrativa em texto puro. NÃO inclua títulos, marcadores ou qualquer texto que não seja parte da história (como "Cenário:", "O Inimigo:", etc.).
     """
     messages = [{"role": "user", "content": prompt}]
     return await llm_prompt(messages)
@@ -125,9 +126,11 @@ async def continue_narrative(
 
     Instruções de Resposta:
     1. Descreva o resultado da ação do jogador e, em seguida, a reação e o contra-ataque do inimigo.
-    2. A sua resposta deve ser APENAS a narrativa em texto puro.
-    3. NÃO inclua títulos como "Resultado da Ação do Jogador" ou "Reação do Inimigo". Apenas o texto corrido.
-    4. No final da sua resposta, adicione a seguinte linha especial, sem pular linha: `[DANO_CAUSADO:{player_damage},DANO_RECEBIDO:{enemy_damage}]`
+    2. A sua resposta deve ser um único parágrafo, curto e direto ao ponto.
+    3. Seja conciso. A narrativa deve ter no máximo 3 frases.
+    4. A sua resposta deve ser APENAS a narrativa em texto puro.
+    5. NÃO inclua títulos como "Resultado da Ação do Jogador" ou "Reação do Inimigo". Apenas o texto corrido.
+    6. No final da sua resposta, adicione a seguinte linha especial, sem pular linha: `[DANO_CAUSADO:{player_damage},DANO_RECEBIDO:{enemy_damage}]`
     """
     messages = [{"role": "user", "content": prompt}]
     return await llm_prompt(messages)
