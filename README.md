@@ -21,6 +21,7 @@ O RPGNexus é um sistema web de RPG textual que utiliza um modelo de linguagem (
 - **Linguagem:** Python 3.11
 - **Framework:** FastAPI
 - **Banco de Dados:** MongoDB
+- **Banco Vetorial:** ChromaDB (para memória da IA)
 - **Autenticação:** JWT (JSON Web Tokens)
 - **Inteligência Artificial:** LLM (Large Language Model) para geração de narrativas.
 - **Containerização:** Docker e VS Code Dev Container
