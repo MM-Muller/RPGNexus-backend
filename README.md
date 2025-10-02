@@ -46,12 +46,89 @@ Estas instruções permitirão que você tenha uma cópia do projeto em operaç�
 
 ### 🐳 Executando com Dev Container (Recomendado)
 
-Este projeto está configurado para ser executado em um ambiente de desenvolvimento containerizado, o que simplifica a configuração.
+O projeto está configurado para ser executado em um ambiente de desenvolvimento containerizado, o que simplifica a configuração.
+
+```
+/sua-pasta-de-projetos
+├── /RPGNexus-backend/   <-- (este repositório)
+├── /RPGNexus-frontend/
+└── docker-compose.yml     <-- (crie este arquivo na raiz)
+```
+Este é o docker-compose que orquestra todos os serviços necessários para a aplicação. Adicionar o arquivo diretamente no root com os dois repositórios.
+```
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: ./RPGNexus-backend
+      dockerfile: ./.devcontainer/Dockerfile
+    container_name: rpgnexus_backend
+    volumes:
+      - ./RPGNexus-backend:/workspace:cached
+    command: sleep infinity
+    ports:
+      - "8000:8000"
+    network_mode: host
+    depends_on:
+      - db
+      - chroma
+    env_file:
+      - ./RPGNexus-backend/.env
+    environment:
+      MONGODB_URL: "mongodb://rpg_user:rpg_password123@localhost:27017/?authSource=rpg_textual"
+      CHROMA_HOST: "localhost"
+      CHROMA_PORT: "8001"
+
+  frontend:
+    build:
+      context: ./RPGNexus-frontend
+      dockerfile: ./.devcontainer/Dockerfile
+    container_name: rpgnexus_frontend
+    volumes:
+      - ./RPGNexus-frontend:/workspace:cached
+      - /workspace/node_modules
+    command: sleep infinity
+    ports:
+      - "4200:4200"
+    network_mode: host
+
+  db:
+    build:
+      context: ./RPGNexus-backend
+      dockerfile: mongo.Dockerfile
+    container_name: rpgnexus_db
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: rpg_textual
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  chroma:
+    image: chromadb/chroma:0.4.24
+    container_name: rpgnexus_chroma
+    restart: unless-stopped
+    volumes:
+      - chroma_data:/chroma/chroma
+    ports:
+      - "8001:8000"
+
+volumes:
+  mongodb_data:
+  chroma_data:
+```
+
+Em seguida:
 
 1.  Clone o repositório:
     ```bash
     git clone https://github.com/MM-Muller/RPGNexus-backend
-    cd rpgnexus-backend
+    docker-compose up --build -d
+    code -n rpgnexus-backend
     ```
 2.  Abra o projeto no VS Code.
 3.  O VS Code irá sugerir **"Reopen in Container"**. Clique nesta opção.
@@ -59,6 +136,59 @@ Este projeto está configurado para ser executado em um ambiente de desenvolvime
 
 O servidor estará disponível em `http://localhost:8000`.
 
+---
+
+⚙️ Configuração de Ambiente (.env)
+Antes de executar o projeto, é crucial configurar as variáveis de ambiente para o backend.
+
+1. Navegue até a pasta /RPGNexus-backend.
+2. Crie um ficheiro chamado .env.
+
+```
+/RPGNexus-backend/   <-- (este repositório)
+├── .env             <-- (crie este arquivo)
+└── ...
+```
+
+3. Copie a estrutura abaixo para o seu ficheiro .env e preencha os valores. É necessário fornecer pelo menos uma das chaves de API para os LLMs.
+
+``` 
+# Chave secreta para assinar os tokens JWT. Mude para um valor longo e aleatório em produção.
+
+SECRET_KEY="uma-chave-super-secreta-e-diferente-para-producao"
+
+  
+
+# URL de conexão com o MongoDB
+
+MONGODB_URL="mongodb://rpg_user:rpg_password123@localhost:27017/?authSource=rpg_textual"
+
+  
+
+# Nome do Banco de Dados
+
+DB_NAME="rpg_textual"
+
+  
+
+# Configurações do Token
+
+ALGORITHM="HS256"
+
+ACCESS_TOKEN_EXPIRE_MINUTES=180
+
+  
+
+# Chaves de API para LLMs (quando for implementar)
+
+GOOGLE_AISTUDIO_KEY="sua-key-aqui"
+
+GROQ_KEY="sua-key-aqui"
+
+CLOUDFLARE_WORKERS_AI_KEY="sua-key-aqui"
+
+CLOUDFLARE_ACCOUNT_ID="sua-key-aqui"
+```
 ---
 
 ## 📜 Documentação da API
@@ -117,7 +247,7 @@ A estrutura do projeto foi organizada para separar as responsabilidades, facilit
 │   ├── schemas/            # Modelos de dados Pydantic para validação e serialização
 │   └── main.py             # Ponto de entrada da aplicação FastAPI
 ├── .devcontainer/          # Configurações do Dev Container
-├── .env.example            # Arquivo de exemplo para variáveis de ambiente
+├── .env                    # Arquivo de exemplo para variáveis de ambiente
 ├── requirements.txt        # Dependências de produção
 └── requirements-dev.txt    # Dependências de desenvolvimento
 ```
