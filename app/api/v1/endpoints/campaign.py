@@ -293,6 +293,7 @@ async def websocket_endpoint(
                 }
                 if updated_state["enemy_health"] <= 0 or updated_state["player_health"] <= 0:
                     event["vitoria"] = updated_state["enemy_health"] <= 0
+                    updated_state["status"] = "concluído"
                 
                 await crud_battle.save_battle_state(
                     db, {**current_state_doc, **updated_state}
@@ -317,7 +318,9 @@ async def websocket_endpoint(
                 )
 
             elif message["type"] == "exit_battle":
-                await crud_battle.delete_battle_state(db, character_id, battle_id)
+                current_state_doc = await crud_battle.get_battle_state(db, character_id, battle_id)
+                if not current_state_doc or current_state_doc.get("status") != "concluído":
+                    await crud_battle.delete_battle_state(db, character_id, battle_id)
                 await websocket.close()
                 break
 
@@ -347,6 +350,31 @@ async def get_most_recent_battle_state(
     if not battle_state:
         raise HTTPException(
             status_code=404, detail="Nenhum estado de batalha encontrado."
+        )
+
+    return serialize_object_id(battle_state)
+
+
+@router.get(
+    "/state/{character_id}/{battle_id}",
+    summary="Retorna o estado de uma batalha específica.",
+)
+async def get_specific_battle_state(
+    character_id: str,
+    battle_id: str,
+    db: AsyncIOMotorDatabase = Depends(deps.get_db),
+    current_user=Depends(deps.get_current_user),
+):
+    char_from_db = await crud_character.get_character_by_id(db, character_id)
+    if not char_from_db or str(char_from_db["user_id"]) != str(current_user["_id"]):
+        raise HTTPException(status_code=403, detail="Acesso negado.")
+
+    battle_state = await crud_battle.get_battle_state_by_character_and_user(
+        db, character_id, battle_id, str(current_user["_id"])
+    )
+    if not battle_state:
+        raise HTTPException(
+            status_code=404, detail="Nenhum estado de batalha encontrado para esta combinação."
         )
 
     return serialize_object_id(battle_state)
