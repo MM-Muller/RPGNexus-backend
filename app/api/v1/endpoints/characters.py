@@ -71,11 +71,23 @@ async def add_experience(
         
         if "attributes.strength" not in attributes_to_increment:
             attributes_to_increment["attributes.strength"] = 0
-        attributes_to_increment["attributes.strength"] += 1
+        attributes_to_increment["attributes.strength"] += 2 
 
         if "attributes.intelligence" not in attributes_to_increment:
             attributes_to_increment["attributes.intelligence"] = 0
-        attributes_to_increment["attributes.intelligence"] += 1
+        attributes_to_increment["attributes.intelligence"] += 2
+
+        if "attributes.charisma" not in attributes_to_increment:
+            attributes_to_increment["attributes.charisma"] = 0
+        attributes_to_increment["attributes.charisma"] += 2
+
+        if "attributes.dexterity" not in attributes_to_increment:
+            attributes_to_increment["attributes.dexterity"] = 0
+        attributes_to_increment["attributes.dexterity"] += 2
+
+        if "attributes.intuition" not in attributes_to_increment:
+            attributes_to_increment["attributes.intuition"] = 0
+        attributes_to_increment["attributes.intuition"] += 2
         
         xp_needed = get_xp_for_next_level(new_level)
 
